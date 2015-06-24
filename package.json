@@ -1,0 +1,39 @@
+{
+  "name": "Telegrambot",
+  "version": "0.0.1",
+  "description": "Easily create a Telegram bot in node.js with the new bot api",
+  "keywords": [
+    "Telegram",
+    "bot",
+    "application",
+    "node"
+  ],
+  "author": {
+    "name": "Akshay S Dinesh",
+    "email": "asdofindia@gmail.com",
+    "url": "http://learnlearn.in"
+  },
+  "homepage": "http://learnlearn.in",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/asdofindia/node-telegrambot"
+  },
+  "engines": {
+    "node": ">= 0.6.0",
+    "npm": ">= 1.0.0"
+  },
+  "dependencies": {
+    "ddg": "0.0.3",
+    "events": "^1.0.2",
+    "express": "^3.4.8",
+    "google": "^1.2.0",
+    "irc": "^0.3.12",
+    "raw-body": "^2.1.1",
+    "request": "^2.58.0",
+    "string.prototype.startswith": "^0.2.0"
+  },
+  "devDependencies": {},
+  "bundleDependencies": [],
+  "private": true,
+  "main": "server.js"
+}
