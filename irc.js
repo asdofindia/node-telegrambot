@@ -7,8 +7,16 @@ var config = require('./config');
 module.exports = function(){
     var self=this;
     this.eventEmitter = eventEmitter;
+    this.sanitize = function(text) {
+        text = text.replace(/\*/g, '\\*');
+        text = text.replace(/_/g, '\\_');
+        text = text.replace(/\[/g, '\\[');
+        text = text.replace(/`/g, '\\`');
+        return text;
+    };
     this.broadcaster = function(message){
-        eventEmitter.emit('ircmsg', message)
+        message.text = this.sanitize(message.text);
+        eventEmitter.emit('ircmsg', message);
     };
     this.initialize = function(){
         self.freebot = new irc.Client('chat.freenode.net', 'node-telegrambot', {
