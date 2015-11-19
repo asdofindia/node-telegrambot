@@ -29,7 +29,6 @@ module.exports = function(){
         });
     };
     this.receiver = function(message){
-        // console.log("irc receiver taking over message "+message.text)
         if (config.tg[message.chat.id]){
           var to = config.tg[message.chat.id];
           if (to[0]=="freenode"){

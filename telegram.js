@@ -5,6 +5,8 @@ require('string.prototype.startswith');
 var events = require('events');
 var eventEmitter = new events.EventEmitter;
 var config = require('./config');
+var imgur = require('imgur');
+var utils = require('./utils');
 
 module.exports = function(){
     this.eventEmitter = eventEmitter;
@@ -19,7 +21,7 @@ module.exports = function(){
                 var obj = JSON.parse(body);
                 callback(obj);
             } else {
-              // console.log(body);
+              console.log(body);
             }
         });
     };
@@ -29,7 +31,7 @@ module.exports = function(){
                 var obj=JSON.parse(body);
                 callback(obj);
             } else {
-                // console.log(body);
+                console.log(body);
             }
         });
     };
@@ -38,21 +40,21 @@ module.exports = function(){
             this.myId = body.result.id;
             console.log("My ID is "+this.myId);
         });
-        if (process.env.APP_DNS) {
-          this.post_enddata("setWebhook", {"url": "https://" + process.env.APP_DNS + "/telegram/callback"}, function(body){
-              // console.log(JSON.stringify(body));
+        if (process.env.OPENSHIFT_APP_DNS) {
+          this.post_enddata("setWebhook", {"url": "https://" + process.env.OPENSHIFT_APP_DNS + "/telegram/callback"}, function(body){
+              console.log(JSON.stringify(body));
           });
         }
     };
     this.process = function(update){
-        // console.log(update);
+        console.log(update);
         if (typeof update.message != "undefined") {
           var message = update.message;
           this.broadcaster(message);
           if (typeof message.text != "undefined") {
             var text = message.text;
             if (text.startsWith("/g ")){
-              // console.log("Googling");
+              console.log("Googling");
               this.google(message);
             }
             if (text.startsWith("/d ")){
@@ -65,6 +67,8 @@ module.exports = function(){
               // console.log("request for help");
               this.help(message);
             }
+          } else if (typeof message.photo != "undefined") {
+            this.imgur(message);
           }
         }
     };
@@ -74,7 +78,7 @@ module.exports = function(){
           "text": reply,
           "reply_to_message_id": message.message_id
         }, function(body){
-          // console.log(JSON.stringify(body));
+          console.log(JSON.stringify(body));
           bot.broadcaster(body.result);
         });
     };
@@ -82,9 +86,10 @@ module.exports = function(){
         broadcast = typeof broadcast != "undefined"? broadcast : true;
         this.post_enddata("sendMessage", {
             "chat_id": parseInt(chat_id,10),
-            "text": message
+            "text": message,
+            "parse_mode": "Markdown"
         }, function(body){
-            // console.log(JSON.stringify(body));
+            console.log(JSON.stringify(body));
             if(broadcast){
               bot.broadcaster(body.result);
             }
@@ -106,7 +111,7 @@ module.exports = function(){
     this.ddg = function(message) {
         var query = message.text.substring(3);
         var options = {
-            "useragent": "node-telegrambot",
+            "useragent": "Grambot",
             "no_redirects": "1",
             "no_html": "1"
         };
@@ -128,24 +133,56 @@ module.exports = function(){
         });
     };
     this.help = function(message){
-        var reply = "This is a Telegram bot, beta! I can search Google with '/g query', search duckduckgo with '/d query'";
+        var reply = "This is Grambot Beta, beta! I can search Google with '/g query', search duckduckgo with '/d query'";
         // console.log("helping");
         this.replyto(message, reply);
     };
+    this.imgur = function(message) {
+        var photo = message.photo.pop();
+        // console.log(photo);
+        this.post_enddata("getFile", {
+            file_id: photo.file_id
+        }, function(json){
+            // console.log(json)
+            var url = "https://api.telegram.org/file/bot"+ process.env.TG_TOKEN + "/" + json.result.file_path;
+            // console.log(url);
+            imgur.uploadUrl(url)
+                .then(function(json){
+                    // should call this.broadcaster instead of eventEmitter to allow for photo replies
+                    message.text = json.data.link;
+                    eventEmitter.emit('tgmsg', message);
+                })
+                .catch(function(err){
+                    console.log(err.message);
+                });
+        });
+    };
     this.broadcaster = function(message){
-        if (message.text){
+        if (message.reply_to_message) {
+            var messageReplyToWhom = utils.gettgname(message.reply_to_message);
+            var messageAppend = '';
+            if (messageReplyToWhom == "gram_bot"){
+                messageAppend = "@" + message.reply_to_message.text.split(':')[0] + ", ";
+            } else {
+                messageAppend = "@" + messageReplyToWhom + ", ";
+            }
+            if (typeof message.text != "undefined") {
+                message.text = messageAppend + message.text;
+            }
+        }
+        if (typeof message.text != "undefined"){
             eventEmitter.emit('tgmsg', message)
         }
     };
     this.receiver = function(message){
-        // console.log("tg receive taking over message '" + message.text +"' from "+ message.to + " on server(" + message.server + ")")
+        console.log("tg receive taking over message '" + message.text +"' from "+ message.to + " on server(" + message.server + ")")
         if (config.irc[message.server]){
           if (config.irc[message.server][message.to]){
             var to = config.irc[message.server][message.to];
             if (!message.action){
-              bot.sendto(to, message.from + ": " + message.text, false);
+              bot.sendto(to, "*" + message.from + "*" + ": " + message.text, false);
             } else {
-              bot.sendto(to, message.from+" "+message.text, false)
+              bot.sendto(to, "*" + message.from + "*" + " " + message.text, false)
             }
           }
         }

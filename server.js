@@ -11,7 +11,7 @@ var events = require('events');
 /**
  *  Define the sample application.
  */
-var TelegramBot = function() {
+var GramBot = function() {
 
     //  Scope.
     var self = this;
@@ -26,13 +26,13 @@ var TelegramBot = function() {
      */
     self.setupVariables = function() {
         //  Set the environment variables we need.
-        self.ipaddress = process.env.NODEJS_IP;
-        self.port      = process.env.NODEJS_PORT || 8080;
+        self.ipaddress = process.env.OPENSHIFT_NODEJS_IP;
+        self.port      = process.env.OPENSHIFT_NODEJS_PORT || 8080;
 
         if (typeof self.ipaddress === "undefined") {
             //  Log errors on OpenShift but continue w/ 127.0.0.1 - this
             //  allows us to run/test the app locally.
-            console.warn('No NODEJS_IP var, using 127.0.0.1');
+            console.warn('No OPENSHIFT_NODEJS_IP var, using 127.0.0.1');
             self.ipaddress = "127.0.0.1";
         };
     };
@@ -109,16 +109,10 @@ var TelegramBot = function() {
         self.hooks = { };
 
         self.hooks['/telegram/callback'] = function(req, res){
-            // self.tgbot.process(req.body);
-            // console.log(req.text);
             self.tgbot.process(JSON.parse(req.text))
             res.send('ok, thanks');
         };
     };
-
-    // self.logmiddle = function(req, res, next){
-    //     console.log()
-    // };
 
     /**
      *  Initialize the server (express) and create the routes and register
@@ -128,34 +122,11 @@ var TelegramBot = function() {
         self.createRoutes();
         self.createHooks();
         self.app = express();
-        // self.router = express.Router();
-        //
-        // self.router.use(function(req, res, next){
-        //     console.log("%s %s %s", req.method, req.url, req.path);
-        //     next();
-        // });
 
         //  Add handlers for the app (from the routes).
         for (var r in self.routes) {
             self.app.get(r, self.routes[r]);
         }
-        // self.app.use(morgan('combined'));
-        // self.app.use(function(req, res, next){
-        //     var data = '';
-        //     req.setEncoding('utf8');
-        //     req.on('data', function(chunk){
-        //         data += chunk;
-        //     });
-        //     req.on('end', function(){
-        //         console.log(data);
-        //         next();
-        //     });
-        // });
-        // self.app.use(bodyParser());
-        // self.app.use(bodyParser.urlencoded({extended: true}));
-        // self.app.use(multer());
-        // self.app.use(bodyParser.text());
-        // self.app.use(bodyParser.raw());
         self.app.post('/telegram/callback',function(req, res, next){
             getRawBody(req, {
                 encoding: 'utf8'
@@ -228,6 +199,6 @@ var TelegramBot = function() {
 /**
  *  main():  Main code.
  */
-var telegrambot = new TelegramBot();
-telegrambot.initialize();
-telegrambot.start();
+var grammy = new GramBot();
+grammy.initialize();
+grammy.start();
