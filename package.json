@@ -28,7 +28,7 @@
     "express": "^3.4.8",
     "google": "^1.2.0",
     "imgur": "^0.1.7",
-    "irc": "^0.3.12",
+    "irc": "^0.4.0",
     "raw-body": "^2.1.1",
     "request": "^2.58.0",
     "string.prototype.startswith": "^0.2.0"
