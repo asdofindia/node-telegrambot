@@ -24,7 +24,8 @@ module.exports = function(){
             port: 8001,
             debug: true,
             secure: false,
-            sasl: false
+            sasl: false,
+            stripColors: true
         });
         self.freebot.addListener('error', function(message) {
             console.log('error: ', message);
